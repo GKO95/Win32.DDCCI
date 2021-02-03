@@ -14,6 +14,7 @@
 struct MonitorList {
 
 	std::vector<HMONITOR>			rcHMONITOR;					// Container for the monitor handle.
+	std::vector<RECT>				rcArrayOfMonitorRects;		// Container for the RECT data array of the physical monitors for each HMONITOR.
 	std::vector<DWORD>				rcNumberOfPhysicalMonitors;	// Container for the number of physical monitor associated to each HMONITOR.
 	std::vector<LPPHYSICAL_MONITOR>	rcArrayOfPhysicalMonitors;	// Container for the structure data array of the physical monitors for each HMONITOR.
 
@@ -47,6 +48,7 @@ struct MonitorList {
 		/* ALTERNATIVE:
 		pThis->rcHMONITOR.push_back(MonitorFromRect(lprcMonitor, MONITOR_DEFAULTTONULL));
 		*/
+		pThis->rcArrayOfMonitorRects.push_back(*lprcMonitor);
 		return TRUE;
 	}
 
@@ -107,6 +109,37 @@ int main() {
 	//==============================================================
 	// MANIPULATE THE MONITOR VIA DDC/CI
 	//==============================================================
+	for (int index = 0; index < monitors.rcHMONITOR.size(); index++)
+	{
+		for (int nMonitor = 0; nMonitor < monitors.rcNumberOfPhysicalMonitors[index]; nMonitor++)
+		{
+			std::cout << "[" << (int)monitors.rcArrayOfPhysicalMonitors[index]->hPhysicalMonitor << "] " 
+				<< monitors.rcArrayOfMonitorRects[index].right - monitors.rcArrayOfMonitorRects[index].left << " x " 
+				<< monitors.rcArrayOfMonitorRects[index].bottom - monitors.rcArrayOfMonitorRects[index].top 
+				<< "\t(" << monitors.rcArrayOfMonitorRects[index].left << ", " << monitors.rcArrayOfMonitorRects[index].top << ")" << std::endl;
+		}
+	} std::cout << "--------------------------------" << std::endl;
+
+	int selection;
+	HANDLE hMonitor = INVALID_HANDLE_VALUE;
+	while (true)
+	{
+		std::cout << "Select the monitor to communicate DDC/CI: ";
+		std::cin >> selection;
+		for (int index = 0; index < monitors.rcHMONITOR.size(); index++)
+		{
+			for (int nMonitor = 0; nMonitor < monitors.rcNumberOfPhysicalMonitors[index]; nMonitor++)
+			{
+				if ((int)monitors.rcArrayOfPhysicalMonitors[index]->hPhysicalMonitor == selection)
+				{
+					hMonitor = monitors.rcArrayOfPhysicalMonitors[index]->hPhysicalMonitor;
+					break;
+				}
+			}
+			if (hMonitor != INVALID_HANDLE_VALUE) break;
+		}
+		if (hMonitor != INVALID_HANDLE_VALUE) break;
+	}
 
 	return 0;
 }
