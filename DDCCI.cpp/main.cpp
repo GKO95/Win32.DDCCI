@@ -3,10 +3,20 @@
 
 /* Essential headers for "SetupAPI.lib"; do not forget to include library to the project! */
 #include <Windows.h>
-#include <SetupAPI.h>
 
+/* Essential headers for DDC/CI using "Dxva2.lib"; do not forget to include library to the project! */
 #include <physicalmonitorenumerationapi.h>
 #include <lowlevelmonitorconfigurationapi.h>
+
+//==============================================================
+// ENUMERATION FOR COMMAND OPTION SELECTION
+//==============================================================
+enum class cmdInterface : BYTE {
+	EXIT,
+	GET,
+	SET,
+	MAX_COUNT,
+};
 
 //==============================================================
 // STRUCTURE THAT STORES THE MONITOR INFORMATION
@@ -120,17 +130,22 @@ int main() {
 		}
 	} std::cout << "--------------------------------" << std::endl;
 
-	int selection;
+
+	/*
+		SELECT THE MONITOR to communicate DDC/CI.
+		Beware, this may not be available for a television which is kinda bit different from a monitor.
+	*/
+	int nSelect;
 	HANDLE hMonitor = INVALID_HANDLE_VALUE;
 	while (true)
 	{
 		std::cout << "Select the monitor to communicate DDC/CI: ";
-		std::cin >> selection;
+		std::cin >> nSelect;
 		for (int index = 0; index < monitors.rcHMONITOR.size(); index++)
 		{
 			for (int nMonitor = 0; nMonitor < monitors.rcNumberOfPhysicalMonitors[index]; nMonitor++)
 			{
-				if ((int)monitors.rcArrayOfPhysicalMonitors[index]->hPhysicalMonitor == selection)
+				if ((int)monitors.rcArrayOfPhysicalMonitors[index]->hPhysicalMonitor == nSelect)
 				{
 					hMonitor = monitors.rcArrayOfPhysicalMonitors[index]->hPhysicalMonitor;
 					break;
@@ -139,6 +154,56 @@ int main() {
 			if (hMonitor != INVALID_HANDLE_VALUE) break;
 		}
 		if (hMonitor != INVALID_HANDLE_VALUE) break;
+	}
+	
+	cmdInterface cmdSelect = cmdInterface::EXIT;
+	while (true)
+	{
+		std::cout << std::endl << " 1. GET" << std::endl << " 2. SET" << std::endl << " 0. EXIT" << std::endl << "Select the configuration option: ";
+		std::cin >> nSelect; cmdSelect = cmdInterface(nSelect);
+
+		if (static_cast<int>(cmdSelect) >= static_cast<int>(cmdInterface::MAX_COUNT)) continue;
+		else if (cmdSelect == cmdInterface::EXIT) break;
+
+		/*
+			CONVERTS TWO-DIGIT hexadecimal string vcp code to numerical BYTE which ranges from 0 ~ 255.
+			The format of the hexadecimal must be "0x00", otherwise cannot be recognized by the program.
+		*/
+		std::string vpc; BYTE opcode;
+		std::cout << " - Enter the VCP code for DDC/CI: ";
+		std::cin >> vpc;
+		if ((vpc.c_str()[1] == 'x' || vpc.c_str()[1] == 'X') && vpc.size() == 4)
+		{
+			opcode = std::strtoul(vpc.c_str(), nullptr, 16);
+		}
+		else
+		{
+			std::cout << " [INFO] Please enter the hexadecimal in \"0x00\" format!" << std::endl;
+			continue;
+		}
+
+		/*
+			DEPENDING ON THE selection, either GET or SET monitor configuration such as Dim.Brightness
+			using universal "0x10" VCP code. The input and output values from the DDC/CI are decimal.
+		*/
+		if (cmdSelect == cmdInterface::GET)
+		{
+			DWORD currentValue, maximumValue;
+			if (!GetVCPFeatureAndVCPFeatureReply(hMonitor, opcode, NULL, &currentValue, &maximumValue))
+				std::cout << " [INFO] Failed to get the configuration from the monitor with DDC/CI!" << std::endl;
+			else
+				std::cout << " >> " << currentValue << " [MAX." << maximumValue << "]" << std::endl;
+		}
+		else
+		{
+			DWORD setValue;
+			std::cout << " - Enter the value for the VCP code: ";
+			std::cin >> setValue;
+			if (!SetVCPFeature(hMonitor, opcode, setValue))
+				std::cout << " [INFO] Failed to set the configuration from the monitor with DDC/CI!" << std::endl;
+			else
+				std::cout << " >> " << vpc << "set to " << setValue << std::endl;
+		}
 	}
 
 	return 0;
