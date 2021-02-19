@@ -130,7 +130,6 @@ int main() {
 		}
 	} std::cout << "--------------------------------" << std::endl;
 
-
 	/*
 		SELECT THE MONITOR to communicate DDC/CI.
 		Beware, this may not be available for a television which is kinda bit different from a monitor.
