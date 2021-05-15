@@ -76,7 +76,66 @@ def main():
     #==============================================================
 	# GET PHYSICAL MONITORS TO ACQUIRE DISPLAY DATA CHANNEL (DDC)
 	#==============================================================
-    ...
+    for index in range(len(monitors.rcHMONITOR)):
+        for nMonitor in range(monitors.rcNumberOfPhysicalMonitors[index].value):
+            print("[{0}] {1} x {2}\t({3}, {4})".format(
+                0 if monitors.rcArrayOfPhysicalMonitors[index][nMonitor].hPhysicalMonitor == None else monitors.rcArrayOfPhysicalMonitors[index][nMonitor].hPhysicalMonitor, 
+                monitors.rcArrayOfMonitorRects[index]["right"] - monitors.rcArrayOfMonitorRects[index]["left"],
+                monitors.rcArrayOfMonitorRects[index]["bottom"] - monitors.rcArrayOfMonitorRects[index]["top"],
+                monitors.rcArrayOfMonitorRects[index]["left"], monitors.rcArrayOfMonitorRects[index]["top"]
+                ))
+    print("--------------------------------")
+
+    """
+        SELECT THE MONITOR to communicate DDC/CI.
+        Beware, this may not be available for a television which is kinda bit different from a monitor.
+    """
+    hMonitor = None
+    while(True):
+        nSelect = int(input("Select the monitor to communicate DDC/CI: "))
+        for index in range(len(monitors.rcHMONITOR)):
+            for nMonitor in range((monitors.rcNumberOfPhysicalMonitors[index].value)):
+                if monitors.rcArrayOfPhysicalMonitors[index][nMonitor].hPhysicalMonitor == (None if nSelect == 0 else nSelect):
+                    hMonitor = HANDLE(monitors.rcArrayOfPhysicalMonitors[index][nMonitor].hPhysicalMonitor)
+                    break
+            if hMonitor != None: break
+        if hMonitor != None: break
+
+    while(True):
+        print("\n 1. GET\n 2. SET\n 0. EXIT")
+        nSelect = int(input("Select the configuration option: "))
+
+        if nSelect != CMD_EXIT and nSelect != CMD_GET and nSelect != CMD_SET: continue
+        elif nSelect == CMD_EXIT: break
+        
+        """
+            CONVERTS TWO-DIGIT hexadecimal string vcp code to numerical BYTE which ranges from 0 ~ 255.
+            The format of the hexadecimal must be "0x00", otherwise cannot be recognized by the program.
+        """
+        vcp = input(" - Enter the VCP code for DDC/CI: ")
+        if (vcp[0:2] == "0x" or vcp [0:2] == "0X") and len(vcp) == 4:
+            opcode = int(vcp[2:], 16)
+        else:
+            print(" [INFO] Please enter the hexadecimal in \"0x00\" format!")
+            continue
+
+        """
+            DEPENDING ON THE selection, either GET or SET monitor configuration such as Dim.Brightness
+            using universal "0x10" VCP code. The input and output values from the DDC/CI are decimal.
+        """
+        if nSelect == CMD_GET:
+            currentValue = DWORD()
+            maximumValue = DWORD()
+            if not Dxva2.GetVCPFeatureAndVCPFeatureReply(hMonitor, opcode, 0, pointer(currentValue), pointer(maximumValue)):
+                print(" [INFO] Failed to get the configuration from the monitor with DDC/CI!")
+            else:
+                print(f" >> {currentValue.value} [MAX.{maximumValue.value}]")
+        else:
+            setValue = DWORD(int(input(" - Enter the value for the VCP code: ")))
+            if not Dxva2.SetVCPFeature(hMonitor, opcode, setValue):
+                print(" [INFO] Failed to set the configuration from the monitor with DDC/CI!")
+            else:
+                print(f" >> {vcp} set to {setValue}")
 
 
 if __name__ == "__main__":

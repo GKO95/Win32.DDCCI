@@ -23,6 +23,20 @@ class Dxva2:
         __function.restype = c_bool
         return __function(hMonitor, dwPhysicalMonitorArraySize, pPhysicalMonitorArray)
 
+    @staticmethod
+    def GetVCPFeatureAndVCPFeatureReply(hMonitor, bVCPCode, pvct, pdwCurrentValue, pdwMaximumValue):
+        __function = windll.dxva2.GetVCPFeatureAndVCPFeatureReply
+        __function.argtypes = [HMONITOR, BYTE, INT, PDWORD, PDWORD]
+        __function.restype = c_bool
+        return __function(hMonitor, bVCPCode, pvct, pdwCurrentValue, pdwMaximumValue)
+
+    @staticmethod
+    def SetVCPFeature(hMonitor, bVCPCode, dwNewValue):
+        __function = windll.dxva2.SetVCPFeature
+        __function.argtypes = [HMONITOR, BYTE, DWORD]
+        __function.restype = c_bool
+        return __function(hMonitor, bVCPCode, dwNewValue)
+
 
 class User32:
     @staticmethod
@@ -46,3 +60,7 @@ def MessageBoxW(hWnd, lpText, lpCaption, uType):
 MB_ICONERROR                = 0x00000010
 MB_ICONQUESTION             = 0x00000020
 MB_ICONWARNING              = 0x00000030
+
+CMD_EXIT                    = 0x00
+CMD_GET                     = 0x01
+CMD_SET                     = 0x02
