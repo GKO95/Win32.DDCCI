@@ -168,12 +168,12 @@ int main() {
 			CONVERTS TWO-DIGIT hexadecimal string vcp code to numerical BYTE which ranges from 0 ~ 255.
 			The format of the hexadecimal must be "0x00", otherwise cannot be recognized by the program.
 		*/
-		std::string vpc; BYTE opcode;
+		std::string vcp; BYTE opcode;
 		std::cout << " - Enter the VCP code for DDC/CI: ";
-		std::cin >> vpc;
-		if ((vpc.c_str()[1] == 'x' || vpc.c_str()[1] == 'X') && vpc.size() == 4)
+		std::cin >> vcp;
+		if ((vcp.c_str()[1] == 'x' || vcp.c_str()[1] == 'X') && vcp.size() == 4)
 		{
-			opcode = std::strtoul(vpc.c_str(), nullptr, 16);
+			opcode = std::strtoul(vcp.c_str(), nullptr, 16);
 		}
 		else
 		{
@@ -201,7 +201,7 @@ int main() {
 			if (!SetVCPFeature(hMonitor, opcode, setValue))
 				std::cout << " [INFO] Failed to set the configuration from the monitor with DDC/CI!" << std::endl;
 			else
-				std::cout << " >> " << vpc << "set to " << setValue << std::endl;
+				std::cout << " >> " << vcp << "set to " << setValue << std::endl;
 		}
 	}
 

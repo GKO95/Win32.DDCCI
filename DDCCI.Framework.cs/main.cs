@@ -128,12 +128,12 @@ namespace DDCCI.Framework.cs
                     CONVERTS TWO-DIGIT hexadecimal string vcp code to numerical BYTE which ranges from 0 ~ 255.
                     The format of the hexadecimal must be "0x00", otherwise cannot be recognized by the program.
                 */
-                string vpc; byte opcode;
+                string vcp; byte opcode;
                 Console.Write(" - Enter the VCP code for DDC/CI: ");
-                vpc = Console.ReadLine();
-                if ((vpc.Contains("0x") || vpc.Contains("0X")) && vpc.Length == 4)
+                vcp = Console.ReadLine();
+                if ((vcp.Contains("0x") || vcp.Contains("0X")) && vcp.Length == 4)
                 {
-                    opcode = Convert.ToByte(vpc.Substring(2), 16);
+                    opcode = Convert.ToByte(vcp.Substring(2), 16);
                 }
                 else
                 {
@@ -160,7 +160,7 @@ namespace DDCCI.Framework.cs
                     if (!Dxva2.SetVCPFeature(hMonitor, opcode, setValue))
                         Console.WriteLine(" [INFO] Failed to set the configuration from the monitor with DDC/CI!");
                     else
-                        Console.WriteLine(string.Format(" >> {0} set to {1}", vpc, setValue));
+                        Console.WriteLine(string.Format(" >> {0} set to {1}", vcp, setValue));
                 }
             }
         }
